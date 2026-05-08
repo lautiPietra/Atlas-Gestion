@@ -1,0 +1,60 @@
+/* ============================================================
+   styles.css — Base, variables y reset
+   ============================================================ */
+:root {
+    --black:      #0a0a0a;
+    --white:      #ffffff;
+    --gray-50:    #fafafa;
+    --gray-100:   #f4f4f4;
+    --gray-200:   #e8e8e8;
+    --gray-300:   #d0d0d0;
+    --gray-400:   #a0a0a0;
+    --gray-500:   #707070;
+    --gray-600:   #505050;
+    --gray-700:   #303030;
+    --gray-800:   #1a1a1a;
+    --sidebar-bg: #0a0a0a;
+    --sidebar-w:  240px;
+    --topbar-h:   56px;
+    --radius:     4px;
+    --radius-sm:  2px;
+    --shadow:     0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-md:  0 4px 12px rgba(0,0,0,.12);
+    --transition: 0.18s ease;
+    --font:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 15px; scroll-behavior: smooth; }
+
+body {
+    font-family: var(--font);
+    background: var(--gray-100);
+    color: var(--black);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+ul, ol { list-style: none; }
+img { display: block; max-width: 100%; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--gray-100); }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+/* Tipografía base */
+h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+h4 { font-size: 0.9rem; font-weight: 600; }
+p  { color: var(--gray-600); }
+small { font-size: 0.8rem; color: var(--gray-500); }
+
+/* Google Fonts import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');

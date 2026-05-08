@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="Pietra Cloud Gestión — Demo interactivo"/>
+    <title>Pietra Cloud Gestión — Demo</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css"/>
+    <link rel="stylesheet" href="css/components.css"/>
+    <link rel="stylesheet" href="css/pages.css"/>
+
+    <!-- Favicon inline SVG -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><polygon points='16,2 30,28 2,28' fill='%230a0a0a'/><polygon points='16,10 24,24 8,24' fill='white'/></svg>"/>
+
+    <style>
+        .demo-badge {
+            position: fixed;
+            bottom: 18px;
+            right: 18px;
+            background: #f59e0b;
+            color: #fff;
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+            z-index: 9999;
+            box-shadow: 0 2px 10px rgba(0,0,0,.18);
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f4f4f4">
+            <div style="text-align:center">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="margin:0 auto 16px">
+                    <polygon points="24,4 44,42 4,42" fill="#0a0a0a"/>
+                    <polygon points="24,14 34,34 14,34" fill="#f4f4f4"/>
+                </svg>
+                <div style="width:28px;height:28px;border:2.5px solid #e8e8e8;border-top-color:#0a0a0a;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cartel de modo demo (siempre visible) -->
+    <div class="demo-badge">Modo Demo</div>
+
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
+    <!-- Core JS: demoClient reemplaza a supabase.js — NO se carga auth.js -->
+    <script src="js/config.js"></script>
+    <script src="js/demoClient.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/modal.js"></script>
+    <script src="js/router.js"></script>
+
+    <!-- Controllers (sin cambios) -->
+    <script src="controllers/dashboardController.js"></script>
+    <script src="controllers/productosController.js"></script>
+    <script src="controllers/stockController.js"></script>
+    <script src="controllers/ventasController.js"></script>
+    <script src="controllers/comprasController.js"></script>
+    <script src="controllers/clientesController.js"></script>
+    <script src="controllers/proveedoresController.js"></script>
+    <script src="controllers/reportesController.js"></script>
+
+    <!-- Auth simulado para modo demo (debe ir antes de app.js) -->
+    <script>
+        const Auth = {
+            isAuthenticated: async () => true,
+            getUser: () => ({ id: 1, name: 'Demo', username: 'demo', role: 'Modo Demo' }),
+            logout: () => Toast.info('Estás usando la versión demo — los cambios se pierden al cerrar'),
+            getToken: () => 'demo',
+            login: async () => ({ success: true })
+        };
+    </script>
+
+    <!-- App init (último) -->
+    <script src="js/app.js"></script>
+</body>
+</html>
