@@ -5,6 +5,13 @@
 [build.environment]
   SECRETS_SCAN_OMIT_KEYS = "ATLAS_API_URL"
 
+# Proxy al backend Atlas — evita CORS en el browser
+[[redirects]]
+  from   = "/api/*"
+  to     = "https://pietracloud.com.ar/api/:splat"
+  status = 200
+  force  = true
+
 # Redireccion limpia de /demo
 [[redirects]]
   from   = "/demo"

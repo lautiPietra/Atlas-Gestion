@@ -41,8 +41,9 @@ const Auth = (() => {
     }
 
     // ── Llamada al backend Atlas ─────────────────────────────
+    // Usa path relativo → Netlify proxy reenvía a pietracloud.com.ar (sin CORS)
     async function _callAtlas(username, password) {
-        const res = await fetch(`${CONFIG.ATLAS_API_URL}/api/sistema/login`, {
+        const res = await fetch('/api/sistema/login', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({ username: username.trim(), password })

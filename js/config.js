@@ -11,7 +11,6 @@ const CONFIG = (() => {
         );
     }
     return {
-        ATLAS_API_URL:     (env && env.ATLAS_API_URL)     || '',
         SUPABASE_URL:      (env && env.SUPABASE_URL)      || '',
         SUPABASE_ANON_KEY: (env && env.SUPABASE_ANON_KEY) || '',
 
