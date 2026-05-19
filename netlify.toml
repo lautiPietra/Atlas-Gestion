@@ -2,6 +2,9 @@
   command = "node scripts/build-env.js"
   publish = "."
 
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "ATLAS_API_URL"
+
 # Redireccion limpia de /demo
 [[redirects]]
   from   = "/demo"
