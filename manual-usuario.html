@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Manual de Usuario — Pietra Cloud</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #1a1a1a;
+    background: #fff;
+  }
+
+  /* ── Portada ── */
+  .cover {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0a;
+    color: #fff;
+    text-align: center;
+    page-break-after: always;
+  }
+  .cover svg { margin-bottom: 32px; }
+  .cover h1 { font-size: 48px; font-weight: 800; letter-spacing: -1px; }
+  .cover .sub { font-size: 18px; color: #a0a0a0; margin-top: 8px; }
+  .cover .version {
+    margin-top: 48px;
+    font-size: 13px;
+    color: #555;
+    border-top: 1px solid #333;
+    padding-top: 24px;
+    width: 300px;
+  }
+
+  /* ── Contenido ── */
+  .content { max-width: 900px; margin: 0 auto; padding: 60px 48px; }
+
+  /* ── Índice ── */
+  .toc { page-break-after: always; }
+  .toc h2 { font-size: 28px; font-weight: 700; margin-bottom: 32px; padding-bottom: 12px; border-bottom: 2px solid #0a0a0a; }
+  .toc ol { list-style: none; counter-reset: toc; }
+  .toc ol li {
+    counter-increment: toc;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 14px;
+    border-bottom: 1px dotted #ddd;
+  }
+  .toc ol li::before {
+    content: counter(toc);
+    font-weight: 700;
+    color: #0a0a0a;
+    min-width: 24px;
+  }
+  .toc .toc-sub { padding-left: 32px; font-size: 13px; color: #555; }
+
+  /* ── Secciones ── */
+  .section { page-break-before: always; padding-top: 8px; }
+  .section-header {
+    background: #0a0a0a;
+    color: #fff;
+    padding: 20px 32px;
+    border-radius: 8px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .section-header .icon { font-size: 28px; }
+  .section-header h2 { font-size: 24px; font-weight: 700; }
+  .section-header p { font-size: 13px; color: #aaa; margin-top: 2px; }
+
+  h3 { font-size: 18px; font-weight: 700; margin: 32px 0 12px; color: #0a0a0a; }
+  h4 { font-size: 15px; font-weight: 600; margin: 24px 0 8px; color: #333; }
+  p { margin-bottom: 12px; color: #333; }
+
+  /* ── Pasos ── */
+  .steps { list-style: none; counter-reset: steps; margin: 16px 0 24px; }
+  .steps li {
+    counter-increment: steps;
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+  }
+  .steps li::before {
+    content: counter(steps);
+    background: #0a0a0a;
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ── Tips ── */
+  .tip {
+    background: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 16px 0;
+    font-size: 13px;
+    color: #166534;
+  }
+  .warn {
+    background: #fffbeb;
+    border-left: 4px solid #d97706;
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 16px 0;
+    font-size: 13px;
+    color: #92400e;
+  }
+  .info {
+    background: #eff6ff;
+    border-left: 4px solid #2563eb;
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 16px 0;
+    font-size: 13px;
+    color: #1e40af;
+  }
+
+  /* ── Capturas ── */
+  .screenshot {
+    margin: 24px 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  .screenshot img {
+    width: 100%;
+    display: block;
+  }
+  .screenshot .caption {
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: #6b7280;
+    font-style: italic;
+  }
+  .screenshot-placeholder {
+    background: #f3f4f6;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 13px;
+    margin: 24px 0;
+  }
+  .screenshot-placeholder strong { display: block; font-size: 14px; color: #6b7280; margin-bottom: 4px; }
+
+  /* ── Tabla de campos ── */
+  .fields {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 13px;
+  }
+  .fields th {
+    background: #0a0a0a;
+    color: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+  }
+  .fields td {
+    padding: 9px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+  }
+  .fields tr:nth-child(even) td { background: #f9fafb; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-req { background: #fee2e2; color: #dc2626; }
+  .badge-opt { background: #f3f4f6; color: #6b7280; }
+
+  /* ── Flujo ── */
+  .flow {
+    display: flex;
+    gap: 0;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .flow-step {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    position: relative;
+  }
+  .flow-step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 16px;
+    z-index: 1;
+  }
+  .flow-step:first-child { border-radius: 6px 0 0 6px; }
+  .flow-step:last-child { border-radius: 0 6px 6px 0; }
+
+  /* ── Print ── */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  @media print {
+    body { font-size: 12px; }
+    .cover { height: 100vh; }
+    .section { page-break-before: always; }
+    .no-break { page-break-inside: avoid; }
+    a { text-decoration: none; color: inherit; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     PORTADA
+══════════════════════════════════════════ -->
+<div class="cover">
+  <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+    <polygon points="36,6 66,62 6,62" fill="white"/>
+    <polygon points="36,22 52,52 20,52" fill="#0a0a0a"/>
+  </svg>
+  <h1>PIETRA CLOUD</h1>
+  <p class="sub">Sistema de Gestión Comercial</p>
+  <div class="version">
+    Manual de Usuario · Versión 1.0<br/>
+    Sistema de stock, ventas, compras y más
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ══════════════════════════════════════════
+     ÍNDICE
+══════════════════════════════════════════ -->
+<div class="toc section">
+  <h2>Índice</h2>
+  <ol>
+    <li>Introducción al sistema</li>
+    <li>Acceso y login</li>
+    <li>Dashboard — panel de control</li>
+    <li>
+      Productos
+      <div class="toc-sub">4.1 Categorías &nbsp;·&nbsp; 4.2 Crear producto &nbsp;·&nbsp; 4.3 Editar &nbsp;·&nbsp; 4.4 Inactivar</div>
+    </li>
+    <li>
+      Stock
+      <div class="toc-sub">5.1 Niveles de stock &nbsp;·&nbsp; 5.2 Registrar movimiento &nbsp;·&nbsp; 5.3 Historial y filtros</div>
+    </li>
+    <li>
+      Ventas
+      <div class="toc-sub">6.1 Ver ventas &nbsp;·&nbsp; 6.2 Nueva venta paso a paso &nbsp;·&nbsp; 6.3 Cancelar venta</div>
+    </li>
+    <li>
+      Compras
+      <div class="toc-sub">7.1 Ver compras &nbsp;·&nbsp; 7.2 Nueva compra &nbsp;·&nbsp; 7.3 Recibir mercadería &nbsp;·&nbsp; 7.4 Cancelar</div>
+    </li>
+    <li>
+      Clientes
+      <div class="toc-sub">8.1 Ver clientes &nbsp;·&nbsp; 8.2 Nuevo cliente &nbsp;·&nbsp; 8.3 Editar e inactivar</div>
+    </li>
+    <li>
+      Proveedores
+      <div class="toc-sub">9.1 Ver proveedores &nbsp;·&nbsp; 9.2 Nuevo proveedor</div>
+    </li>
+    <li>Reportes</li>
+    <li>Flujo de trabajo recomendado</li>
+  </ol>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     1. INTRODUCCIÓN
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="icon">▣</span>
+    <div>
+      <h2>1. Introducción al sistema</h2>
+      <p>Qué es Pietra Cloud y para qué sirve</p>
+    </div>
+  </div>
+
+  <p><strong>Pietra Cloud</strong> es un sistema de gestión comercial basado en la nube. Permite administrar el inventario de productos, registrar ventas y compras, gestionar clientes y proveedores, y visualizar el estado del negocio en tiempo real desde cualquier dispositivo con acceso a internet.</p>
+
+  <h3>¿Qué podés hacer con el sistema?</h3>
+  <table class="fields">
+    <tr><th>Módulo</th><th>Funciones principales</th></tr>
+    <tr><td><strong>Dashboard</strong></td><td>Ver resumen diario, semanal, mensual y anual de ventas, compras y stock</td></tr>
+    <tr><td><strong>Productos</strong></td><td>Administrar el catálogo, categorías, precios y stock inicial</td></tr>
+    <tr><td><strong>Stock</strong></td><td>Controlar inventario, registrar entradas/salidas/ajustes y ver historial</td></tr>
+    <tr><td><strong>Ventas</strong></td><td>Registrar ventas a clientes, con descuento de stock automático</td></tr>
+    <tr><td><strong>Compras</strong></td><td>Registrar órdenes de compra a proveedores y recepciones de mercadería</td></tr>
+    <tr><td><strong>Clientes</strong></td><td>Base de datos de clientes con historial</td></tr>
+    <tr><td><strong>Proveedores</strong></td><td>Base de datos de proveedores</td></tr>
+    <tr><td><strong>Reportes</strong></td><td>Análisis de rentabilidad, productos más vendidos y movimientos</td></tr>
+  </table>
+
+  <div class="info">Todos los datos son privados y exclusivos de tu cuenta. Ningún otro usuario puede ver tu información.</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     2. LOGIN
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="icon">⊙</span>
+    <div>
+      <h2>2. Acceso al sistema</h2>
+      <p>Cómo iniciar sesión</p>
+    </div>
+  </div>
+
+  <p>Para acceder al sistema ingresá a la URL del sitio. Si no tenés sesión activa, el sistema te redirige automáticamente a la pantalla de login.</p>
+
+  <ol class="steps">
+    <li>Ingresá tu <strong>nombre de usuario</strong> en el campo "Usuario".</li>
+    <li>Ingresá tu <strong>contraseña</strong> en el campo "Contraseña".</li>
+    <li>Hacé click en <strong>Ingresar</strong>.</li>
+    <li>Si los datos son correctos, el sistema te lleva al Dashboard automáticamente.</li>
+  </ol>
+
+  <div class="screenshot">
+    <img src="img-manual/login.png" alt="Pantalla de login" onerror="imgFail(this)"/>
+    <div class="caption">Pantalla de ingreso al sistema</div>
+  </div>
+
+  <div class="warn">
+    <strong>Intentos fallidos:</strong> Después de 10 intentos incorrectos, el sistema bloquea el acceso por 10 minutos como medida de seguridad.
+  </div>
+
+  <h3>Cerrar sesión</h3>
+  <p>Para cerrar sesión hacé click en el ícono <strong>⏻</strong> que aparece en la esquina inferior izquierda del menú lateral, junto a tu nombre de usuario.</p>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     3. DASHBOARD
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="icon">▣</span>
+    <div>
+      <h2>3. Dashboard</h2>
+      <p>Panel de control con resumen del negocio</p>
+    </div>
+  </div>
+
+  <p>El Dashboard es la primera pantalla que ves al ingresar. Muestra un resumen completo de la actividad del negocio con datos en tiempo real.</p>
+
+  <div class="screenshot">
+    <img src="img-manual/dashboard.png" alt="Dashboard principal" onerror="imgFail(this)"/>
+    <div class="caption">Dashboard — vista general del negocio</div>
+  </div>
+
+  <h3>Tarjetas de resumen</h3>
+  <table class="fields">
+    <tr><th>Tarjeta</th><th>Qué muestra</th></tr>
+    <tr><td><strong>Ventas netas del día</strong></td><td>Total en pesos de ventas completadas en el período seleccionado. Incluye la cantidad de ventas completadas sobre el total.</td></tr>
+    <tr><td><strong>Compras del día</strong></td><td>Total en pesos de compras recibidas en el período. Incluye cantidad de órdenes recibidas.</td></tr>
+    <tr><td><strong>Diferencia del día</strong></td><td>Ventas menos compras. En verde si es positivo (ganancia), en rojo si es negativo.</td></tr>
+  </table>
+
+  <h3>Filtros de período</h3>
+  <p>En la parte superior derecha podés cambiar el período que muestra el dashboard:</p>
+  <ul style="margin-left:20px; margin-bottom:16px; color:#333;">
+    <li style="margin-bottom:6px"><strong>Hoy</strong> — datos del día actual</li>
+    <li style="margin-bottom:6px"><strong>Semana</strong> — últimos 7 días</li>
+    <li style="margin-bottom:6px"><strong>Mes</strong> — mes en curso</li>
+    <li style="margin-bottom:6px"><strong>Año</strong> — año en curso</li>
+    <li style="margin-bottom:6px"><strong>Fecha personalizada</strong> — seleccioná cualquier fecha y hacé click en Aplicar</li>
+  </ul>
+
+  <h3>Panel inferior izquierdo — Ventas del día</h3>
+  <p>Lista las ventas del período seleccionado mostrando el cliente, fecha, monto y estado (Completada / Cancelada). También tiene el botón <strong>Ver compras</strong> para ir directo al módulo de compras.</p>
+
+  <h3>Panel inferior derecho — Stock bajo</h3>
+  <p>Muestra los productos que tienen stock igual o menor al mínimo configurado (por defecto: 5 unidades). Si todos los productos tienen stock normal, aparece el mensaje "✓ Todo el stock en niveles normales".</p>
+
+  <h3>Movimientos recientes</h3>
+  <p>Lista los últimos movimientos de stock registrados (entradas, salidas, ajustes) con fecha, producto y cantidad.</p>
+
+  <div class="tip">El botón <strong>Ver stock</strong> en el panel de stock bajo te lleva directamente al módulo de Stock para gestionar el inventario rápidamente.</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     4. PRODUCTOS
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="icon">◈</span>
+    <div>
+      <h2>4. Productos</h2>
+      <p>Gestión del catálogo de productos</p>
+    </div>
+  </div>
+
+  <p>El módulo de Productos es donde administrás todo tu catálogo. Podés crear, editar, inactivar y buscar productos, además de administrar las categorías.</p>
+
+  <div class="screenshot">
+    <img src="img-manual/productos.png" alt="Listado de productos" onerror="imgFail(this)"/>
+    <div class="caption">Listado de productos con opciones de búsqueda y filtros</div>
+  </div>
+
+  <h3>Tarjetas de resumen en Productos</h3>
+  <table class="fields">
+    <tr><th>Indicador</th><th>Descripción</th></tr>
+    <tr><td><strong>Inventario al costo</strong></td><td>Valor total del stock actual calculado al precio de compra de cada producto</td></tr>
+    <tr><td><strong>Inventario al precio de venta</strong></td><td>Valor del stock si se vendiera todo al precio de venta</td></tr>
+    <tr><td><strong>Stock bajo</strong></td><td>Cantidad de productos con stock menor o igual al mínimo</td></tr>
+  </table>
+
+  <h3>Buscar y filtrar productos</h3>
+  <ul style="margin-left:20px; margin-bottom:16px; color:#333;">
+    <li style="margin-bottom:6px"><strong>Buscador</strong> — escribí nombre, código o descripción para filtrar en tiempo real</li>
+    <li style="margin-bottom:6px"><strong>Filtro por categoría</strong> — seleccioná una categoría en el desplegable de la derecha</li>
+    <li style="margin-bottom:6px"><strong>Ver inactivos</strong> — botón para mostrar u ocultar los productos inactivados</li>
+  </ul>
+
+  <h3>4.1 Categorías</h3>
+  <p>Antes de crear productos, es recomendable crear las categorías para poder organizarlos.</p>
+
+  <div class="screenshot">
+    <img src="img-manual/categorias.png" alt="Modal de categorías" onerror="imgFail(this)"/>
+    <div class="caption">Gestión de categorías de productos</div>
+  </div>
+
+  <ol class="steps">
+    <li>Hacé click en el botón <strong>Categorías</strong> en la parte superior derecha de la pantalla de Productos.</li>
+    <li>En el campo "Nueva categoría..." escribí el nombre (Ej: Electrónica, Alimentos, Ropa).</li>
+    <li>Hacé click en <strong>Agregar</strong>.</li>
+    <li>La categoría aparece en la lista inmediatamente.</li>
+  </ol>
+
+  <div class="tip">Para eliminar una categoría hacé click en el ícono rojo de basura. Solo podés eliminar categorías que no tengan productos asignados.</div>
+
+  <h3>4.2 Crear un nuevo producto</h3>
+
+  <div class="screenshot">
+    <img src="img-manual/nuevo-producto.png" alt="Formulario nuevo producto" onerror="imgFail(this)"/>
+    <div class="caption">Formulario para crear un nuevo producto</div>
+  </div>
+
+  <ol class="steps">
+    <li>Hacé click en el botón <strong>+ Nuevo producto</strong>.</li>
+    <li>Completá el formulario con los datos del producto.</li>
+    <li>Hacé click en <strong>Crear producto</strong>.</li>
+  </ol>
+
+  <h4>Campos del formulario</h4>
+  <table class="fields">
+    <tr><th>Campo</th><th>Requerido</th><th>Descripción</th></tr>
+    <tr><td><strong>Código</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Código interno del producto (Ej: SKU-001, ELE-005). Útil para identificación rápida.</td></tr>
+    <tr><td><strong>Nombre</strong></td><td><span class="badge badge-req">Requerido</span></td><td>Nombre del producto. Máximo 200 caracteres.</td></tr>
+    <tr><td><strong>Descripción</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Descripción detallada del producto.</td></tr>
+    <tr><td><strong>Categoría</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Categoría a la que pertenece el producto.</td></tr>
+    <tr><td><strong>Stock inicial</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Cantidad inicial en inventario. Por defecto 0.</td></tr>
+    <tr><td><strong>Precio de compra</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Costo al que comprás el producto al proveedor.</td></tr>
+    <tr><td><strong>Precio de venta</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Precio al que vendés el producto al cliente.</td></tr>
+  </table>
+
+  <div class="info">El margen de ganancia (columna "Margen" en el listado) se calcula automáticamente como la diferencia entre precio de venta y precio de compra.</div>
+
+  <h3>4.3 Editar un producto</h3>
+  <ol class="steps">
+    <li>En el listado, hacé click en el ícono de <strong>lápiz ✏</strong> en la fila del producto que querés editar.</li>
+    <li>Modificá los campos necesarios.</li>
+    <li>Hacé click en <strong>Guardar</strong>.</li>
+  </ol>
+
+  <h3>4.4 Inactivar y reactivar productos</h3>
+  <p>En lugar de eliminar productos (lo cual perdería el historial de ventas), el sistema permite <strong>inactivarlos</strong>. Los productos inactivos no aparecen en las búsquedas de ventas ni compras.</p>
+
+  <ol class="steps">
+    <li>En la fila del producto, hacé click en el botón <strong>Inactivar</strong>.</li>
+    <li>El producto desaparece del listado principal.</li>
+    <li>Para volver a verlo, hacé click en <strong>Ver inactivos</strong>.</li>
+    <li>Para reactivarlo, hacé click en <strong>Activar</strong> en la fila del producto inactivo.</li>
+  </ol>
+
+  <div class="warn">El botón rojo de basura <strong>elimina definitivamente</strong> el producto. Esta acción no se puede deshacer. Se recomienda usar "Inactivar" en lugar de eliminar.</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     5. STOCK
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="icon">≡</span>
+    <div>
+      <h2>5. Stock</h2>
+      <p>Control de inventario y movimientos</p>
+    </div>
+  </div>
+
+  <p>El módulo de Stock tiene dos vistas: <strong>Niveles de stock</strong> (estado actual del inventario) e <strong>Historial de movimientos</strong> (todos los cambios registrados).</p>
+
+  <div class="screenshot">
+    <img src="img-manual/stock.png" alt="Módulo de stock" onerror="imgFail(this)"/>
+    <div class="caption">Vista de niveles de stock con alerta de productos bajos</div>
+  </div>
+
+  <h3>5.1 Niveles de stock</h3>
+  <p>Muestra todos los productos activos ordenados de menor a mayor stock. Incluye una barra visual de estado por producto.</p>
+
+  <table class="fields">
+    <tr><th>Estado</th><th>Criterio</th></tr>
+    <tr><td><span class="badge" style="background:#fee2e2;color:#dc2626">Stock bajo</span></td><td>Stock igual o menor al mínimo (5 unidades por defecto)</td></tr>
+    <tr><td><span class="badge" style="background:#dcfce7;color:#16a34a">Normal</span></td><td>Stock por encima del mínimo</td></tr>
+  </table>
+
+  <p>Desde esta vista podés hacer click en <strong>+ Movimiento</strong> en cualquier fila para registrar un movimiento directamente para ese producto.</p>
+
+  <h3>5.2 Registrar un movimiento de stock</h3>
+
+  <div class="screenshot">
+    <img src="img-manual/stock-movimiento.png" alt="Registrar movimiento de stock" onerror="imgFail(this)"/>
+    <div class="caption">Modal para registrar un movimiento de stock</div>
+  </div>
+
+  <ol class="steps">
+    <li>Hacé click en <strong>+ Registrar movimiento</strong> (botón superior) o en <strong>+ Movimiento</strong> junto a un producto.</li>
+    <li>Seleccioná el <strong>Producto</strong> del desplegable.</li>
+    <li>Elegí el <strong>Tipo</strong> de movimiento.</li>
+    <li>Ingresá la <strong>Cantidad</strong>.</li>
+    <li>Opcionalmente escribí un <strong>Motivo u observación</strong>.</li>
+    <li>Hacé click en <strong>Registrar</strong>.</li>
+  </ol>
+
+  <h4>Tipos de movimiento</h4>
+  <table class="fields">
+    <tr><th>Tipo</th><th>Efecto</th><th>Cuándo usarlo</th></tr>
+    <tr><td><strong>Entrada</strong></td><td>Aumenta el stock</td><td>Cuando recibís mercadería sin pasar por una orden de compra</td></tr>
+    <tr><td><strong>Salida</strong></td><td>Disminuye el stock</td><td>Cuando retirás productos del inventario por rotura, pérdida, etc.</td></tr>
+    <tr><td><strong>Ajuste</strong></td><td>Define el stock final exacto</td><td>Cuando hacés un conteo físico y querés igualar el sistema a la realidad</td></tr>
+  </table>
+
+  <div class="tip">Para el <strong>Ajuste</strong>, ingresás el stock FINAL deseado, no la diferencia. Por ejemplo: si el sistema dice 10 unidades y el conteo físico da 8, ingresás "8" y el sistema ajusta automáticamente.</div>
+
+  <h3>5.3 Historial de movimientos</h3>
+  <p>Hacé click en la pestaña <strong>Historial de movimientos</strong> para ver todos los cambios registrados.</p>
+
+  <h4>Filtros disponibles</h4>
+  <table class="fields">
+    <tr><th>Filtro</th><th>Función</th></tr>
+    <tr><td><strong>Búsqueda</strong></td><td>Filtra por nombre de producto o código en tiempo real</td></tr>
+    <tr><td><strong>Desde / Hasta</strong></td><td>Muestra movimientos dentro de un rango de fechas específico</td></tr>
+    <tr><td><strong>Tipo</strong></td><td>Filtra por tipo: todos, entrada, salida o ajuste</td></tr>
+    <tr><td><strong>✕ Limpiar fechas</strong></td><td>Borra los filtros de fecha y muestra los últimos 200 movimientos</td></tr>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     6. VENTAS
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="icon">◎</span>
+    <div>
+      <h2>6. Ventas</h2>
+      <p>Registro y gestión de ventas</p>
+    </div>
+  </div>
+
+  <p>El módulo de Ventas permite registrar todas las ventas realizadas. Al confirmar una venta, el stock de cada producto se descuenta automáticamente.</p>
+
+  <div class="screenshot">
+    <img src="img-manual/ventas.png" alt="Listado de ventas" onerror="imgFail(this)"/>
+    <div class="caption">Listado de ventas con totales y estados</div>
+  </div>
+
+  <h3>6.1 Ver ventas</h3>
+  <p>El listado muestra todas las ventas con número, fecha, cliente, cantidad de ítems, total y estado. El total al tope de la pantalla acumula todas las ventas completadas.</p>
+
+  <h4>Filtros disponibles</h4>
+  <table class="fields">
+    <tr><th>Filtro</th><th>Función</th></tr>
+    <tr><td><strong>Buscar por cliente</strong></td><td>Filtra ventas por nombre de cliente en tiempo real</td></tr>
+    <tr><td><strong>Rango de fechas</strong></td><td>Muestra ventas dentro del período seleccionado</td></tr>
+    <tr><td><strong>Estado</strong></td><td>Filtra por Completada o Cancelada</td></tr>
+  </table>
+
+  <h3>6.2 Nueva venta — paso a paso</h3>
+
+  <div class="screenshot">
+    <img src="img-manual/nueva-venta.png" alt="Modal nueva venta" onerror="imgFail(this)"/>
+    <div class="caption">Formulario para registrar una nueva venta</div>
+  </div>
+
+  <ol class="steps">
+    <li>Hacé click en <strong>+ Nueva venta</strong>.</li>
+    <li>Seleccioná el <strong>Cliente</strong> del desplegable. Si es una venta sin cliente registrado, seleccioná "Consumidor final".</li>
+    <li>Opcionalmente escribí una <strong>Nota</strong> u observación.</li>
+    <li>En el campo <strong>Producto</strong>, escribí el nombre o código para buscar. El sistema muestra sugerencias con precio y stock disponible.</li>
+    <li>Seleccioná el producto de la lista.</li>
+    <li>Ajustá la <strong>Cantidad</strong> y verificá el <strong>Precio unitario</strong> (se completa automáticamente con el precio de venta, pero podés modificarlo).</li>
+    <li>Hacé click en <strong>+ Agregar</strong> para sumar el producto al carrito.</li>
+    <li>Repetí los pasos 4 a 7 para cada producto adicional.</li>
+    <li>Verificá el <strong>Total</strong> en la esquina inferior derecha del formulario.</li>
+    <li>Hacé click en <strong>Confirmar venta</strong>.</li>
+  </ol>
+
+  <div class="tip">Podés buscar productos escribiendo parte del nombre o el código (Ej: "ELE" para ver todos los productos con código que empieza con ELE).</div>
+  <div class="warn">Si el stock de algún producto es insuficiente, el sistema no permite confirmar la venta y muestra un mensaje de error.</div>
+
+  <h4>¿Qué pasa al confirmar una venta?</h4>
+  <ul style="margin-left:20px; margin-bottom:16px; color:#333;">
+    <li style="margin-bottom:6px">Se crea el registro de la venta con estado "Completada".</li>
+    <li style="margin-bottom:6px">El stock de cada producto vendido se reduce automáticamente.</li>
+    <li style="margin-bottom:6px">Se registra un movimiento de stock tipo "Salida" por cada producto.</li>
+    <li style="margin-bottom:6px">El Dashboard se actualiza con los nuevos totales.</li>
+  </ul>
+
+  <h3>6.3 Ver detalle y cancelar una venta</h3>
+  <ol class="steps">
+    <li>Hacé click en el ícono de <strong>ojo 👁</strong> en la fila de la venta para ver el detalle completo con todos los productos.</li>
+    <li>Para cancelar, hacé click en el ícono rojo de <strong>basura</strong>. El sistema pedirá confirmación.</li>
+  </ol>
+  <div class="warn">Cancelar una venta <strong>no devuelve el stock automáticamente</strong>. Si necesitás reponer el stock, registrá un movimiento de entrada manual en el módulo de Stock.</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     7. COMPRAS
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="icon">◒</span>
+    <div>
+      <h2>7. Compras</h2>
+      <p>Órdenes de compra y recepción de mercadería</p>
+    </div>
+  </div>
+
+  <p>El módulo de Compras administra las órdenes de compra a proveedores. El stock se actualiza al <strong>recibir</strong> la mercadería, no al crear la orden.</p>
+
+  <div class="screenshot">
+    <img src="img-manual/compras.png" alt="Listado de compras" onerror="imgFail(this)"/>
+    <div class="caption">Listado de órdenes de compra</div>
+  </div>
+
+  <h3>Estados de una compra</h3>
+  <table class="fields">
+    <tr><th>Estado</th><th>Significado</th><th>Stock</th></tr>
+    <tr><td><span class="badge" style="background:#fef3c7;color:#92400e">Pendiente</span></td><td>Orden creada, mercadería aún no llegó</td><td>Sin cambios</td></tr>
+    <tr><td><span class="badge" style="background:#dcfce7;color:#166534">Recibida</span></td><td>Mercadería recibida y cargada al inventario</td><td>Stock aumentado</td></tr>
+    <tr><td><span class="badge" style="background:#fee2e2;color:#dc2626">Cancelada</span></td><td>Compra cancelada</td><td>Sin cambios (o revertido si estaba recibida)</td></tr>
+  </table>
+
+  <h3>7.2 Nueva compra</h3>
+
+  <div class="screenshot">
+    <img src="img-manual/nueva-compra.png" alt="Modal nueva compra" onerror="imgFail(this)"/>
+    <div class="caption">Formulario para registrar una nueva orden de compra</div>
+  </div>
+
+  <ol class="steps">
+    <li>Hacé click en <strong>+ Nueva compra</strong>.</li>
+    <li>Seleccioná el <strong>Proveedor</strong> (opcional).</li>
+    <li>Seleccioná el <strong>Estado inicial</strong>: "Pendiente" si la mercadería aún no llegó, o "Recibida" si ya la tenés en mano.</li>
+    <li>Opcionalmente escribí una <strong>Nota</strong>.</li>
+    <li>Buscá y agregá los productos igual que en ventas: escribí el nombre o código, ajustá cantidad y precio de compra, hacé click en <strong>+ Agregar</strong>.</li>
+    <li>Hacé click en <strong>Confirmar compra</strong>.</li>
+  </ol>
+
+  <div class="tip">Si seleccionás estado "Recibida" al crear la compra, el stock se actualiza inmediatamente. Si elegís "Pendiente", el stock se actualiza cuando uses el botón Recibir.</div>
+
+  <h3>7.3 Recibir mercadería</h3>
+  <ol class="steps">
+    <li>En el listado de compras, buscá la orden con estado "Pendiente".</li>
+    <li>Hacé click en el botón <strong>Recibir</strong>.</li>
+    <li>El sistema actualiza el estado a "Recibida" y suma el stock de cada producto al inventario.</li>
+  </ol>
+
+  <h3>7.4 Cancelar una compra</h3>
+  <p>Hacé click en el ícono rojo de basura en la fila de la compra. Si la compra estaba en estado "Recibida", el sistema revertirá el stock automáticamente.</p>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     8. CLIENTES
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="icon">◉</span>
+    <div>
+      <h2>8. Clientes</h2>
+      <p>Base de datos de clientes</p>
+    </div>
+  </div>
+
+  <p>El módulo de Clientes te permite mantener un registro de tus clientes para asociarlos a las ventas y consultar su historial.</p>
+
+  <div class="screenshot">
+    <img src="img-manual/clientes.png" alt="Listado y formulario de clientes" onerror="imgFail(this)"/>
+    <div class="caption">Listado de clientes y formulario de nuevo cliente</div>
+  </div>
+
+  <h3>8.2 Crear un nuevo cliente</h3>
+  <ol class="steps">
+    <li>Hacé click en <strong>+ Nuevo cliente</strong>.</li>
+    <li>Completá el formulario.</li>
+    <li>Hacé click en <strong>Crear cliente</strong>.</li>
+  </ol>
+
+  <table class="fields">
+    <tr><th>Campo</th><th>Requerido</th><th>Descripción</th></tr>
+    <tr><td><strong>Nombre</strong></td><td><span class="badge badge-req">Requerido</span></td><td>Nombre completo o razón social del cliente</td></tr>
+    <tr><td><strong>Email</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Correo electrónico del cliente</td></tr>
+    <tr><td><strong>Teléfono</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Número de contacto</td></tr>
+    <tr><td><strong>Documento (DNI/CUIT)</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Identificación fiscal</td></tr>
+    <tr><td><strong>Dirección</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Domicilio del cliente</td></tr>
+    <tr><td><strong>Notas</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Observaciones internas sobre el cliente</td></tr>
+  </table>
+
+  <h3>Buscar clientes</h3>
+  <p>El buscador en la parte superior filtra en tiempo real por nombre, email o documento.</p>
+
+  <h3>8.3 Editar e inactivar</h3>
+  <ul style="margin-left:20px; margin-bottom:16px; color:#333;">
+    <li style="margin-bottom:6px"><strong>✏ Editar</strong> — modifica los datos del cliente</li>
+    <li style="margin-bottom:6px"><strong>👁 Ver detalle</strong> — muestra información completa del cliente</li>
+    <li style="margin-bottom:6px"><strong>Inactivar</strong> — oculta el cliente del listado y de los desplegables de ventas</li>
+    <li style="margin-bottom:6px"><strong>🗑 Eliminar</strong> — elimina definitivamente (no recomendado si tiene ventas asociadas)</li>
+  </ul>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     9. PROVEEDORES
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="icon">◫</span>
+    <div>
+      <h2>9. Proveedores</h2>
+      <p>Base de datos de proveedores</p>
+    </div>
+  </div>
+
+  <p>El módulo de Proveedores funciona de forma similar al de Clientes y permite registrar los datos de tus proveedores para asociarlos a las órdenes de compra.</p>
+
+  <div class="screenshot">
+    <img src="img-manual/proveedores.png" alt="Listado y formulario de proveedores" onerror="imgFail(this)"/>
+    <div class="caption">Listado de proveedores y formulario de nuevo proveedor</div>
+  </div>
+
+  <h3>Crear un nuevo proveedor</h3>
+  <ol class="steps">
+    <li>Hacé click en <strong>+ Nuevo proveedor</strong>.</li>
+    <li>Completá el formulario.</li>
+    <li>Hacé click en <strong>Crear proveedor</strong>.</li>
+  </ol>
+
+  <table class="fields">
+    <tr><th>Campo</th><th>Requerido</th><th>Descripción</th></tr>
+    <tr><td><strong>Nombre / Razón social</strong></td><td><span class="badge badge-req">Requerido</span></td><td>Nombre del proveedor o empresa</td></tr>
+    <tr><td><strong>Contacto</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Nombre de la persona de contacto</td></tr>
+    <tr><td><strong>Email</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Correo del proveedor</td></tr>
+    <tr><td><strong>Teléfono</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Número de contacto</td></tr>
+    <tr><td><strong>CUIT</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Identificación fiscal (formato: 20-12345678-9)</td></tr>
+    <tr><td><strong>Dirección</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Domicilio del proveedor</td></tr>
+    <tr><td><strong>Notas</strong></td><td><span class="badge badge-opt">Opcional</span></td><td>Observaciones internas</td></tr>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     10. REPORTES
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="icon">◰</span>
+    <div>
+      <h2>10. Reportes</h2>
+      <p>Análisis y estadísticas del negocio</p>
+    </div>
+  </div>
+
+  <p>El módulo de Reportes ofrece análisis detallados sobre el rendimiento del negocio, incluyendo rentabilidad, productos más vendidos y evolución de ventas.</p>
+
+  <h3>Tipos de reportes disponibles</h3>
+  <table class="fields">
+    <tr><th>Reporte</th><th>Información que muestra</th></tr>
+    <tr><td><strong>Resumen financiero</strong></td><td>Ingresos por ventas, gastos en compras y ganancia neta del período</td></tr>
+    <tr><td><strong>Productos más vendidos</strong></td><td>Ranking de productos por cantidad vendida y por monto generado</td></tr>
+    <tr><td><strong>Evolución de ventas</strong></td><td>Gráfico de ventas diarias en el período seleccionado</td></tr>
+    <tr><td><strong>Rentabilidad por producto</strong></td><td>Margen de ganancia unitario y total por producto</td></tr>
+  </table>
+
+  <h3>Filtrar reportes por período</h3>
+  <p>Al igual que el Dashboard, los reportes pueden filtrarse por Hoy, Semana, Mes, Año o un rango de fechas personalizado.</p>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     11. FLUJO DE TRABAJO
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="icon">▷</span>
+    <div>
+      <h2>11. Flujo de trabajo recomendado</h2>
+      <p>Orden sugerido para empezar a usar el sistema</p>
+    </div>
+  </div>
+
+  <h3>Primera vez — configuración inicial</h3>
+  <div class="flow">
+    <div class="flow-step">1. Crear categorías</div>
+    <div class="flow-step">2. Cargar productos</div>
+    <div class="flow-step">3. Cargar clientes</div>
+    <div class="flow-step">4. Cargar proveedores</div>
+    <div class="flow-step">5. Ajustar stock inicial</div>
+  </div>
+
+  <div class="tip">Antes de registrar ventas, asegurate de tener al menos los productos con su stock inicial cargado.</div>
+
+  <h3>Operación diaria</h3>
+  <table class="fields">
+    <tr><th>Acción</th><th>Cómo hacerlo</th></tr>
+    <tr><td><strong>Registrar una venta</strong></td><td>Ventas → + Nueva venta → seleccionar cliente y productos → Confirmar venta</td></tr>
+    <tr><td><strong>Registrar una compra</strong></td><td>Compras → + Nueva compra → seleccionar proveedor y productos → Confirmar compra</td></tr>
+    <tr><td><strong>Recibir mercadería pendiente</strong></td><td>Compras → buscar la orden pendiente → click en Recibir</td></tr>
+    <tr><td><strong>Corregir stock</strong></td><td>Stock → + Registrar movimiento → tipo Ajuste → ingresar stock real</td></tr>
+    <tr><td><strong>Ver resumen del día</strong></td><td>Dashboard → filtro Hoy</td></tr>
+  </table>
+
+  <h3>Flujo completo de una venta</h3>
+  <ol class="steps">
+    <li>Verificá que el producto tenga stock suficiente (módulo Stock → Niveles de stock).</li>
+    <li>Andá a <strong>Ventas</strong> → <strong>+ Nueva venta</strong>.</li>
+    <li>Seleccioná el cliente (o "Consumidor final" si no está registrado).</li>
+    <li>Buscá y agregá cada producto con su cantidad y precio.</li>
+    <li>Verificá el total y hacé click en <strong>Confirmar venta</strong>.</li>
+    <li>El sistema descuenta el stock automáticamente y registra el movimiento.</li>
+    <li>La venta aparece en el Dashboard como "Completada".</li>
+  </ol>
+
+  <h3>Flujo completo de una compra</h3>
+  <ol class="steps">
+    <li>Cuando hacés un pedido a un proveedor, andá a <strong>Compras</strong> → <strong>+ Nueva compra</strong>.</li>
+    <li>Seleccioná el proveedor y los productos con sus precios de compra.</li>
+    <li>Dejá el estado en <strong>Pendiente</strong> y confirmá la compra.</li>
+    <li>Cuando llegue la mercadería, buscá la orden en el listado y hacé click en <strong>Recibir</strong>.</li>
+    <li>El stock se actualiza automáticamente con las cantidades recibidas.</li>
+  </ol>
+
+  <h3>Consejos útiles</h3>
+  <div class="tip"><strong>Códigos de producto:</strong> Usá un sistema consistente como [CATEGORÍA]-[NÚMERO]. Ejemplo: ELE-001, ALI-002. Facilita la búsqueda en ventas y compras.</div>
+  <div class="tip"><strong>Clientes frecuentes:</strong> Registrá tus clientes habituales para poder filtrar el historial de ventas por cliente y ver cuánto compró cada uno.</div>
+  <div class="tip"><strong>Control de stock:</strong> Hacé un conteo físico periódico y usá la función "Ajuste" para sincronizar el sistema con la realidad.</div>
+  <div class="info"><strong>Stock mínimo:</strong> El sistema marca como "Stock bajo" los productos con 5 o menos unidades. Este valor puede configurarse según las necesidades del negocio.</div>
+
+  <div style="margin-top:64px; padding-top:32px; border-top:2px solid #0a0a0a; text-align:center; color:#6b7280; font-size:12px;">
+    <strong style="font-size:16px; color:#0a0a0a;">PIETRA CLOUD</strong><br/>
+    Sistema de Gestión Comercial · Versión 1.0<br/>
+    Para soporte técnico contactar al administrador del sistema.
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+function imgFail(img) {
+    var alt  = img.alt || 'Captura de pantalla';
+    var file = img.src.split('/').pop();
+    var div  = img.closest('.screenshot');
+    div.outerHTML =
+        '<div class="screenshot-placeholder">' +
+        '<strong>📷 ' + alt + '</strong>' +
+        '<span>Guardá la imagen como <code style="background:#e5e7eb;padding:2px 6px;border-radius:4px;font-size:12px">img-manual/' + file + '</code> para que aparezca aquí</span>' +
+        '</div>';
+}
+</script>
+
+</body>
+</html>

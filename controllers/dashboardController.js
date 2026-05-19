@@ -114,6 +114,9 @@ const DashboardController = {
                         <h2>Dashboard</h2>
                         <p id="dash-period-label" style="color:var(--gray-500);font-size:.85rem">${this._periodText()}</p>
                         <p id="dash-workdate-label" style="font-size:.8rem;margin-top:2px">${this._workdateLabelText()}</p>
+                        <a href="manual-usuario.html" target="_blank" class="btn btn-outline btn-sm" style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+                            📄 Descargar manual de uso
+                        </a>
                     </div>
                     <div class="dash-filter-bar">
                         <div class="dash-mode-btns">
