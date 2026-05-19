@@ -1,12 +1,22 @@
 // ============================================================
-// config.js — Configuración de Supabase
-// ⚠️  Reemplaza con tus credenciales del proyecto Supabase
+// config.js — Lee credenciales desde env-config.js (generado)
+// Para regenerar localmente: node scripts/build-env.js
 // ============================================================
-const CONFIG = {
-    SUPABASE_URL: 'https://dvwvsbxiyoqwbgqczsnc.supabase.co',
-    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2d3ZzYnhpeW9xd2JncWN6c25jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDUxNjEsImV4cCI6MjA5MTA4MTE2MX0.BmYUQrnQv3lA12j9oWsdxCd5wcOmhmHfABOLgmJTUPg',
-    JWT_SECRET: 'atlas-gestion-jwt-secret-2024',
-    APP_NAME: 'Pietra Cloud',
-    VERSION: '1.0.0',
-    STOCK_MINIMO: 5
-};
+const CONFIG = (() => {
+    const env = window.ENV_CONFIG;
+    if (!env || !env.SUPABASE_URL) {
+        console.error(
+            '[CONFIG] env-config.js no cargado o incompleto.\n' +
+            'Ejecutá: node scripts/build-env.js'
+        );
+    }
+    return {
+        ATLAS_API_URL:     (env && env.ATLAS_API_URL)     || '',
+        SUPABASE_URL:      (env && env.SUPABASE_URL)      || '',
+        SUPABASE_ANON_KEY: (env && env.SUPABASE_ANON_KEY) || '',
+
+        APP_NAME:    'Pietra Cloud',
+        VERSION:     '1.0.0',
+        STOCK_MINIMO: 5
+    };
+})();

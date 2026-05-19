@@ -297,6 +297,7 @@ const VentasController = {
         if (!prodId) { Toast.warning('Selecciona un producto'); return; }
         if (cant < 1) { Toast.warning('La cantidad debe ser mayor a 0'); return; }
         if (precio < 0) { Toast.warning('El precio no puede ser negativo'); return; }
+        if (precio === 0 && !confirm('El precio es $0. ¿Confirmas que querés agregar este ítem gratis?')) return;
 
         const yaEnCarrito = this._cantidadReservada(prodId);
         if (yaEnCarrito + cant > stock) {
@@ -404,7 +405,8 @@ const VentasController = {
                 items_count: this._carrito.length,
                 estado: 'completada',
                 notas,
-                fecha: WorkDate.get()
+                fecha: WorkDate.get(),
+                created_by: Auth.getUser()?.username || 'sistema'
             });
             const venta = Array.isArray(ventaArr) ? ventaArr[0] : ventaArr;
 
@@ -418,16 +420,20 @@ const VentasController = {
                     precio_unitario: item.precio_unitario,
                     subtotal: item.subtotal
                 });
-                await SupabaseClient.update('productos', item.producto_id, {
-                    stock: Math.max(0, (prod.stock || 0) - item.cantidad)
-                });
+                const updated = await SupabaseClient.updateIf('productos', item.producto_id,
+                    { stock: (prod.stock || 0) - item.cantidad },
+                    { stock: `gte.${item.cantidad}` }
+                );
+                if (!updated || !updated.length)
+                    throw new Error(`Stock de "${item.producto_nombre}" cambió mientras se procesaba. Reintentá la venta.`);
                 await SupabaseClient.insert('stock_movimientos', {
                     producto_id: item.producto_id,
                     producto_nombre: item.producto_nombre,
                     tipo: 'salida',
                     cantidad: -item.cantidad,
                     motivo: `Venta #${venta.id}`,
-                    fecha: WorkDate.get()
+                    fecha: WorkDate.get(),
+                    created_by: Auth.getUser()?.username || 'sistema'
                 });
             }));
 

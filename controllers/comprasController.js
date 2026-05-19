@@ -388,7 +388,8 @@ const ComprasController = {
                 items_count: this._carrito.length,
                 estado: estadoSeleccionado,
                 notas,
-                fecha: WorkDate.get()
+                fecha: WorkDate.get(),
+                created_by: Auth.getUser()?.username || 'sistema'
             });
             const compra = Array.isArray(compraArr) ? compraArr[0] : compraArr;
 
@@ -416,7 +417,8 @@ const ComprasController = {
                         tipo: 'entrada',
                         cantidad: item.cantidad,
                         motivo: `Compra #${compra.id} - ${proveedorNombre}`,
-                        fecha: WorkDate.get()
+                        fecha: WorkDate.get(),
+                        created_by: Auth.getUser()?.username || 'sistema'
                     });
                 }));
             }
@@ -514,7 +516,8 @@ const ComprasController = {
                             tipo: 'entrada',
                             cantidad: item.cantidad,
                             motivo: `Recepcion compra #${id} - ${compra.proveedor_nombre || 'Sin proveedor'}`,
-                            fecha: today
+                            fecha: today,
+                            created_by: Auth.getUser()?.username || 'sistema'
                         });
                     }));
 
@@ -562,16 +565,20 @@ const ComprasController = {
                         await Promise.all(items.map(async (item, idx) => {
                             const prod = productosActuales[idx];
                             if (!prod) return;
-                            await SupabaseClient.update('productos', item.producto_id, {
-                                stock: (prod.stock || 0) - item.cantidad
-                            });
+                            const updated = await SupabaseClient.updateIf('productos', item.producto_id,
+                                { stock: (prod.stock || 0) - item.cantidad },
+                                { stock: `gte.${item.cantidad}` }
+                            );
+                            if (!updated || !updated.length)
+                                throw new Error(`Stock de "${item.producto_nombre}" insuficiente para revertir la compra.`);
                             await SupabaseClient.insert('stock_movimientos', {
                                 producto_id: item.producto_id,
                                 producto_nombre: item.producto_nombre,
                                 tipo: 'salida',
                                 cantidad: -item.cantidad,
                                 motivo: `Cancelacion compra #${id}`,
-                                fecha: new Date().toLocaleDateString('sv')
+                                fecha: new Date().toLocaleDateString('sv'),
+                                created_by: Auth.getUser()?.username || 'sistema'
                             });
                         }));
 

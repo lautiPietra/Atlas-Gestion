@@ -182,7 +182,7 @@ const DashboardController = {
             await this._updateStats();
 
         } catch (err) {
-            view.innerHTML = `<div class="page-error"><h3>Error al cargar dashboard</h3><p>${err.message}</p></div>`;
+            view.innerHTML = `<div class="page-error"><h3>Error al cargar dashboard</h3><p>${Utils.escape(err.message)}</p></div>`;
         }
     },
 

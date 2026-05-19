@@ -39,7 +39,7 @@ const Router = (() => {
                 await controller.render(view);
             } catch (err) {
                 console.error('Error al renderizar:', err);
-                view.innerHTML = `<div class="page-error"><h3>Error al cargar</h3><p>${err.message}</p></div>`;
+                view.innerHTML = `<div class="page-error"><h3>Error al cargar</h3><p>${Utils.escape(err.message)}</p></div>`;
             }
         }
     }

@@ -9,17 +9,20 @@ const SupabaseClient = (() => {
     ]);
 
     const getHeaders = () => ({
-        'apikey': CONFIG.SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
+        'apikey':        CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${localStorage.getItem('supabase_token') || CONFIG.SUPABASE_ANON_KEY}`,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=representation'
     });
 
     const BASE = () => `${CONFIG.SUPABASE_URL}/rest/v1`;
 
     function getCurrentUserId() {
         try {
-            return JSON.parse(localStorage.getItem('atlas_user'))?.id ?? null;
+            const token = localStorage.getItem('supabase_token');
+            if (!token) return null;
+            const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+            return payload.user_id || null;
         } catch { return null; }
     }
 
@@ -98,6 +101,18 @@ const SupabaseClient = (() => {
             return request('PATCH', table, data, params);
         },
 
+        // Como update() pero con condiciones extra en el WHERE.
+        // Retorna array vacío si ninguna fila coincidió (lock optimista falló).
+        async updateIf(table, id, data, conditions = {}) {
+            const params = { id: `eq.${id}` };
+            if (TENANT_TABLES.has(table)) {
+                const uid = getCurrentUserId();
+                if (uid) params.user_id = `eq.${uid}`;
+            }
+            for (const [k, v] of Object.entries(conditions)) params[k] = v;
+            return request('PATCH', table, data, params);
+        },
+
         async delete(table, id) {
             let qs = `id=eq.${id}`;
             if (TENANT_TABLES.has(table)) {
@@ -113,7 +128,12 @@ const SupabaseClient = (() => {
         },
 
         async deleteWhere(table, field, value) {
-            const res = await fetch(`${BASE()}/${table}?${field}=eq.${value}`, { method: 'DELETE', headers: getHeaders() });
+            let qs = `${field}=eq.${value}`;
+            if (TENANT_TABLES.has(table)) {
+                const uid = getCurrentUserId();
+                if (uid) qs += `&user_id=eq.${uid}`;
+            }
+            const res = await fetch(`${BASE()}/${table}?${qs}`, { method: 'DELETE', headers: getHeaders() });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
                 throw new Error(friendlyError(res.status, err));

@@ -1,0 +1,9 @@
+# Variables de entorno — nunca subir a git
+.env
+
+# Archivo generado por build-env.js — no editar manualmente
+js/env-config.js
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

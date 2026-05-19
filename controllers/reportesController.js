@@ -107,7 +107,7 @@ const ReportesController = {
             else if (tab === 'stock') await this._renderStock(content);
             else if (tab === 'productos') await this._renderTopProductos(content);
         } catch (err) {
-            content.innerHTML = `<div class="page-error"><p>${err.message}</p></div>`;
+            content.innerHTML = `<div class="page-error"><p>${Utils.escape(err.message)}</p></div>`;
         }
     },
 

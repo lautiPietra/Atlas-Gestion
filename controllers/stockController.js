@@ -309,17 +309,26 @@ const StockController = {
                 }
             }
 
-            await Promise.all([
-                SupabaseClient.update('productos', prodId, { stock: nuevoStock }),
-                SupabaseClient.insert('stock_movimientos', {
-                    producto_id: prodId,
-                    producto_nombre: prodNombre,
-                    tipo,
-                    cantidad: cantidadMovimiento,
-                    motivo,
-                    fecha: new Date().toLocaleDateString('sv')
-                })
-            ]);
+            // Para salidas, usar locking optimista para prevenir stock negativo
+            if (tipo === 'salida') {
+                const updated = await SupabaseClient.updateIf('productos', prodId,
+                    { stock: nuevoStock },
+                    { stock: `gte.${cantidadIngresada}` }
+                );
+                if (!updated || !updated.length)
+                    throw new Error('El stock cambió mientras se procesaba. Reintentá.');
+            } else {
+                await SupabaseClient.update('productos', prodId, { stock: nuevoStock });
+            }
+            await SupabaseClient.insert('stock_movimientos', {
+                producto_id: prodId,
+                producto_nombre: prodNombre,
+                tipo,
+                cantidad: cantidadMovimiento,
+                motivo,
+                fecha: new Date().toLocaleDateString('sv'),
+                created_by: Auth.getUser()?.username || 'sistema'
+            });
 
             Toast.success(`Movimiento registrado. Stock nuevo: ${nuevoStock}`);
             Modal.close();

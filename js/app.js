@@ -143,6 +143,7 @@ const App = (() => {
         const isAuth = await Auth.isAuthenticated();
         if (isAuth) {
             const user = Auth.getUser();
+            if (!user) { Auth.logout(); return; }
             renderApp(user);
             registerRoutes();
             Router.init();
