@@ -48,7 +48,13 @@ const Auth = (() => {
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({ username: username.trim(), password })
         });
-        const data = await res.json();
+        const text = await res.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch {
+            throw new Error(`El servidor respondió con error ${res.status}. Revisá los logs del backend.`);
+        }
         if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
         return data;
     }
