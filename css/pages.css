@@ -219,3 +219,24 @@
     .venta-header, .venta-detail-header, .kpi-row { grid-template-columns: 1fr; }
     .login-card { padding: 28px 20px; }
 }
+
+/* ── Importar productos ── */
+.import-dropzone {
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    background: var(--gray-50);
+}
+.import-dropzone:hover,
+.import-dropzone.dragover {
+    border-color: var(--black);
+    background: var(--gray-100);
+}
+.import-dropzone-icon { font-size: 2.4rem; margin-bottom: 10px; }
+.import-dropzone-text { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+.import-dropzone-sub  { font-size: 0.82rem; color: var(--gray-400); }
+.import-row-error td:first-child { border-left: 3px solid #dc2626; }
+.import-row-ok   td:first-child { border-left: 3px solid #16a34a; }

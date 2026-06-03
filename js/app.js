@@ -10,7 +10,8 @@ const App = (() => {
         { route: '/compras',     label: 'Compras',      icon: '◒' },
         { route: '/clientes',    label: 'Clientes',     icon: '◉' },
         { route: '/proveedores', label: 'Proveedores',  icon: '◫' },
-        { route: '/reportes',    label: 'Reportes',     icon: '◰' }
+        { route: '/reportes',    label: 'Reportes',     icon: '◰' },
+        { route: '/importar',    label: 'Importar',     icon: '⊕' }
     ];
 
     function renderApp(user) {
@@ -163,6 +164,7 @@ const App = (() => {
         Router.register('/clientes',    ClientesController);
         Router.register('/proveedores', ProveedoresController);
         Router.register('/reportes',    ReportesController);
+        Router.register('/importar',    ImportarController);
     }
 
     return { init, handleLogin, toggleMobile, closeMobile };
