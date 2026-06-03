@@ -7,6 +7,8 @@ const ProductosController = {
     _search: '',
     _catFilter: '',
     _showInactive: false,
+    _page: 0,
+    _pageSize: 150,
 
     async render(view) {
         view.innerHTML = '<div class="page-loading"><div class="spinner"></div></div>';
@@ -117,9 +119,21 @@ const ProductosController = {
         this._draw(document.getElementById('app-view'));
     },
 
+    goToPage(n) {
+        const total = this._filtered().length;
+        const totalPages = Math.ceil(total / this._pageSize) || 1;
+        this._page = Math.max(0, Math.min(n, totalPages - 1));
+        const wrapper = document.querySelector('#app-view .table-wrapper');
+        if (wrapper) wrapper.innerHTML = this._buildTable();
+    },
+
     _buildTable() {
-        const rows = this._filtered();
-        if (!rows.length) return '<div class="empty-state"><span class="empty-icon"><> </span><p>No se encontraron productos</p></div>';
+        const all = this._filtered();
+        if (!all.length) return '<div class="empty-state"><span class="empty-icon"><> </span><p>No se encontraron productos</p></div>';
+        const totalPages = Math.ceil(all.length / this._pageSize) || 1;
+        if (this._page >= totalPages) this._page = totalPages - 1;
+        const start = this._page * this._pageSize;
+        const rows = all.slice(start, start + this._pageSize);
 
         const body = rows.map(p => {
             const stockClass = (p.stock || 0) <= CONFIG.STOCK_MINIMO ? 'stock-low' : 'stock-ok';
@@ -143,17 +157,26 @@ const ProductosController = {
             </tr>`;
         }).join('');
 
+        const pagination = totalPages > 1 ? `
+            <div class="table-pagination">
+                <span class="table-pagination-info">${start + 1}–${Math.min(start + this._pageSize, all.length)} de ${all.length}</span>
+                <button class="btn btn-outline btn-sm" onclick="ProductosController.goToPage(${this._page - 1})" ${this._page === 0 ? 'disabled' : ''}>← Ant</button>
+                <button class="btn btn-outline btn-sm" onclick="ProductosController.goToPage(${this._page + 1})" ${this._page >= totalPages - 1 ? 'disabled' : ''}>Sig →</button>
+            </div>
+        ` : '';
+
         return `<table class="table">
             <thead><tr>
                 <th>Codigo</th><th>Nombre</th><th>Categoria</th>
                 <th>P. Compra</th><th>P. Venta</th><th>Margen</th><th>Stock</th><th></th>
             </tr></thead>
             <tbody>${body}</tbody>
-        </table>`;
+        </table>${pagination}`;
     },
 
     onSearch: Utils.debounce(function(val) {
         ProductosController._search = val;
+        ProductosController._page = 0;
         const view = document.getElementById('app-view');
         if (view) {
             const wrapper = view.querySelector('.table-wrapper');
@@ -163,6 +186,7 @@ const ProductosController = {
 
     onCatFilter(val) {
         this._catFilter = val;
+        this._page = 0;
         const view = document.getElementById('app-view');
         if (view) {
             const wrapper = view.querySelector('.table-wrapper');
@@ -439,19 +463,50 @@ const ProductosController = {
 
         Modal.close();
 
-        let ok = 0, skip = 0;
-        for (const prod of activos) {
-            const compra = parseFloat(prod.precio_compra) || 0;
-            if (compra <= 0) { skip++; continue; }
-            const nuevoPrecio = parseFloat((compra * (1 + margen / 100)).toFixed(2));
-            try {
-                await SupabaseClient.update('productos', prod.id, { precio: nuevoPrecio });
-                ok++;
-            } catch { skip++; }
+        const conPrecio = activos.filter(p => parseFloat(p.precio_compra) > 0);
+        const sinPrecio = activos.length - conPrecio.length;
+
+        if (!conPrecio.length) {
+            Toast.warning('Ningún producto tiene precio de compra cargado');
+            return;
         }
 
+        // Overlay de progreso
+        const overlay = document.createElement('div');
+        overlay.id = 'margen-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.82);display:flex;align-items:center;justify-content:center;';
+        overlay.innerHTML = `
+            <div style="background:#fff;border-radius:8px;padding:32px 40px;text-align:center;min-width:300px;max-width:360px">
+                <div style="font-size:1rem;font-weight:700;margin-bottom:8px">Aplicando margen global...</div>
+                <div id="margen-prog-text" style="font-size:2rem;font-weight:800;margin-bottom:14px">0 de ${conPrecio.length}</div>
+                <div style="background:#e5e7eb;border-radius:4px;height:8px;overflow:hidden">
+                    <div id="margen-prog-bar" style="height:100%;background:#0a0a0a;transition:width .1s;width:0%"></div>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+
+        let ok = 0, skip = sinPrecio;
+        const BATCH = 25;
+
+        for (let i = 0; i < conPrecio.length; i += BATCH) {
+            document.getElementById('margen-prog-text').textContent = `${i} de ${conPrecio.length}`;
+            document.getElementById('margen-prog-bar').style.width = `${Math.round(i / conPrecio.length * 100)}%`;
+
+            const chunk = conPrecio.slice(i, i + BATCH);
+            const results = await Promise.allSettled(
+                chunk.map(prod => {
+                    const nuevoPrecio = parseFloat((parseFloat(prod.precio_compra) * (1 + margen / 100)).toFixed(2));
+                    return SupabaseClient.update('productos', prod.id, { precio: nuevoPrecio });
+                })
+            );
+            ok   += results.filter(r => r.status === 'fulfilled').length;
+            skip += results.filter(r => r.status === 'rejected').length;
+        }
+
+        overlay.remove();
+
         if (ok)   Toast.success(`Margen del ${margen}% aplicado a ${ok} producto${ok !== 1 ? 's' : ''}`);
-        if (skip) Toast.warning(`${skip} producto${skip !== 1 ? 's' : ''} omitido${skip !== 1 ? 's' : ''} (precio de compra en 0)`);
+        if (skip) Toast.warning(`${skip} producto${skip !== 1 ? 's' : ''} omitido${skip !== 1 ? 's' : ''} (sin precio de compra)`);
 
         await this._load();
         this._draw(document.getElementById('app-view'));

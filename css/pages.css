@@ -220,6 +220,17 @@
     .login-card { padding: 28px 20px; }
 }
 
+/* ── Paginación de tabla ── */
+.table-pagination {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+.table-pagination-info {
+    flex: 1; font-size: 0.8rem; color: var(--gray-500);
+}
+
 /* ── Importar productos ── */
 .import-dropzone {
     border: 2px dashed var(--gray-300);
