@@ -16,7 +16,7 @@ const ProductosController = {
 
     async _load() {
         const [prods, cats] = await Promise.all([
-            SupabaseClient.select('productos', { select: '*', order: 'nombre.asc' }),
+            SupabaseClient.select('productos', { select: '*', order: 'nombre.asc', limit: 3000 }),
             SupabaseClient.select('categorias', { select: '*', order: 'nombre.asc' })
         ]);
         this._productos = prods || [];
