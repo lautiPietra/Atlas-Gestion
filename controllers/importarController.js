@@ -104,16 +104,39 @@ const ImportarController = {
                 const data = new Uint8Array(ev.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
-                if (!rows.length) {
-                    Toast.warning('El archivo está vacío');
-                    dz.querySelector('.import-dropzone-sub').textContent = 'Ninguna fila encontrada';
+                // Leer como array de arrays para encontrar la fila de encabezados real
+                const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+                // Buscar la primera fila (dentro de las primeras 15) que tenga al menos 1 columna reconocida
+                let headerRowIdx = 0;
+                for (let i = 0; i < Math.min(aoa.length, 15); i++) {
+                    if (aoa[i].some(cell => this._mapHeader(cell) !== null)) {
+                        headerRowIdx = i;
+                        break;
+                    }
+                }
+
+                const headers  = aoa[headerRowIdx];
+                const dataRows = aoa.slice(headerRowIdx + 1)
+                    .filter(row => row.some(cell => String(cell).trim() !== ''));
+
+                if (!dataRows.length) {
+                    Toast.warning('El archivo está vacío o no tiene datos debajo del encabezado');
+                    dz.querySelector('.import-dropzone-sub').textContent = 'Sin datos encontrados';
                     return;
                 }
 
+                // Convertir a array de objetos con los headers reales
+                const rows = dataRows.map(row => {
+                    const obj = {};
+                    headers.forEach((h, i) => { obj[h] = row[i] ?? ''; });
+                    return obj;
+                });
+
                 this._parseRows(rows);
-                dz.querySelector('.import-dropzone-sub').textContent = `${rows.length} fila(s) leída(s)`;
+                dz.querySelector('.import-dropzone-sub').textContent =
+                    `Encabezado en fila ${headerRowIdx + 1} · ${dataRows.length} fila(s) de datos`;
             } catch (err) {
                 Toast.error('No se pudo leer el archivo: ' + err.message);
                 dz.querySelector('.import-dropzone-sub').textContent = 'Error al procesar el archivo';
