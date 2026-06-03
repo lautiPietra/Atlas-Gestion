@@ -42,6 +42,7 @@ const ProductosController = {
                 <div class="page-actions">
                     <button class="btn btn-outline btn-sm" onclick="ProductosController.toggleInactiveView()">${this._showInactive ? 'Ocultar inactivos' : 'Ver inactivos'}</button>
                     <button class="btn btn-outline btn-sm" onclick="ProductosController.openCategorias()">Categorias</button>
+                    <button class="btn btn-outline btn-sm" onclick="ProductosController.openMargenGlobal()">% Margen global</button>
                     <button class="btn btn-primary" onclick="ProductosController.openForm()">
                         ${Utils.icon('plus')} Nuevo producto
                     </button>
@@ -215,11 +216,18 @@ const ProductosController = {
                     </div>` : ''}
                     <div class="form-group">
                         <label class="form-label">Precio de compra</label>
-                        <input type="number" class="form-input" id="p-pcompra" value="${prod.precio_compra || 0}" min="0" step="0.01"/>
+                        <input type="number" class="form-input" id="p-pcompra" value="${prod.precio_compra || 0}" min="0" step="0.01"
+                               oninput="ProductosController.recalcMargen()"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Margen (%)</label>
+                        <input type="number" class="form-input" id="p-margen" placeholder="ej: 70" min="0" step="0.01"
+                               oninput="ProductosController.aplicarMargen()"/>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Precio de venta</label>
-                        <input type="number" class="form-input" id="p-pventa" value="${prod.precio || 0}" min="0" step="0.01"/>
+                        <input type="number" class="form-input" id="p-pventa" value="${prod.precio || 0}" min="0" step="0.01"
+                               oninput="ProductosController.recalcMargenDesdeVenta()"/>
                     </div>
                 </div>
             `,
@@ -341,6 +349,112 @@ const ProductosController = {
         } catch (err) {
             Toast.error(err.message);
         }
+    },
+
+    // ── Helpers de margen en el formulario individual ────────
+    aplicarMargen() {
+        const compra = parseFloat(document.getElementById('p-pcompra')?.value) || 0;
+        const margen = parseFloat(document.getElementById('p-margen')?.value);
+        if (!Number.isNaN(margen) && margen >= 0 && compra > 0) {
+            const venta = compra * (1 + margen / 100);
+            document.getElementById('p-pventa').value = venta.toFixed(2);
+        }
+    },
+
+    recalcMargen() {
+        // Al cambiar precio de compra, si hay margen cargado lo recalcula
+        const margen = parseFloat(document.getElementById('p-margen')?.value);
+        if (!Number.isNaN(margen) && margen >= 0) {
+            this.aplicarMargen();
+        }
+    },
+
+    recalcMargenDesdeVenta() {
+        // Al editar precio de venta a mano, actualiza el campo margen
+        const compra = parseFloat(document.getElementById('p-pcompra')?.value) || 0;
+        const venta  = parseFloat(document.getElementById('p-pventa')?.value)  || 0;
+        const margenEl = document.getElementById('p-margen');
+        if (margenEl && compra > 0) {
+            const m = ((venta - compra) / compra) * 100;
+            margenEl.value = m >= 0 ? m.toFixed(2) : '';
+        }
+    },
+
+    // ── Margen global sobre todos los productos activos ──────
+    openMargenGlobal() {
+        const activos = this._productos.filter(p => p.activo !== false);
+        Modal.open({
+            title: 'Aplicar margen global',
+            size: 'sm',
+            body: `
+                <p style="margin:0 0 16px;color:var(--gray-500);font-size:14px">
+                    Calcula el precio de venta de <strong>${activos.length} producto${activos.length !== 1 ? 's' : ''} activo${activos.length !== 1 ? 's' : ''}</strong>
+                    aplicando el porcentaje sobre el precio de compra de cada uno.<br>
+                    <span style="font-size:12px">precio de venta = precio de compra × (1 + margen / 100)</span>
+                </p>
+                <div class="form-group">
+                    <label class="form-label required">Margen de ganancia (%)</label>
+                    <input type="number" class="form-input" id="margen-global-val" placeholder="ej: 20" min="0" step="0.01" autofocus/>
+                    <span class="form-hint" id="margen-global-preview"></span>
+                </div>
+            `,
+            footer: `
+                <button class="btn btn-outline" onclick="Modal.close()">Cancelar</button>
+                <button class="btn btn-primary" onclick="ProductosController.aplicarMargenGlobal()">
+                    Aplicar a ${activos.length} productos
+                </button>
+            `
+        });
+        setTimeout(() => {
+            const input = document.getElementById('margen-global-val');
+            if (input) {
+                input.focus();
+                input.addEventListener('input', () => {
+                    const m = parseFloat(input.value);
+                    const preview = document.getElementById('margen-global-preview');
+                    if (!preview) return;
+                    if (!Number.isNaN(m) && m >= 0) {
+                        const ej = activos.find(p => parseFloat(p.precio_compra) > 0);
+                        if (ej) {
+                            const nuevo = (parseFloat(ej.precio_compra) * (1 + m / 100)).toFixed(2);
+                            preview.textContent = `Ej: ${ej.nombre} → ${Utils.currency(nuevo)}`;
+                        }
+                    } else {
+                        preview.textContent = '';
+                    }
+                });
+            }
+        }, 50);
+    },
+
+    async aplicarMargenGlobal() {
+        const margen = parseFloat(document.getElementById('margen-global-val')?.value);
+        if (Number.isNaN(margen) || margen < 0) {
+            Toast.warning('Ingresá un porcentaje válido');
+            return;
+        }
+
+        const activos = this._productos.filter(p => p.activo !== false);
+        if (!activos.length) { Toast.warning('No hay productos activos'); return; }
+
+        Modal.close();
+
+        let ok = 0, skip = 0;
+        for (const prod of activos) {
+            const compra = parseFloat(prod.precio_compra) || 0;
+            if (compra <= 0) { skip++; continue; }
+            const nuevoPrecio = parseFloat((compra * (1 + margen / 100)).toFixed(2));
+            try {
+                await SupabaseClient.update('productos', prod.id, { precio: nuevoPrecio });
+                ok++;
+            } catch { skip++; }
+        }
+
+        if (ok)   Toast.success(`Margen del ${margen}% aplicado a ${ok} producto${ok !== 1 ? 's' : ''}`);
+        if (skip) Toast.warning(`${skip} producto${skip !== 1 ? 's' : ''} omitido${skip !== 1 ? 's' : ''} (precio de compra en 0)`);
+
+        await this._load();
+        this._draw(document.getElementById('app-view'));
     },
 
     async openCategorias() {
