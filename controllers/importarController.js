@@ -7,18 +7,20 @@ const ImportarController = {
 
     // Aliases de columnas aceptados (normalizados, sin tildes, minúsculas)
     _COLS: {
-        codigo:        ['codigo', 'code', 'cod', 'sku'],
-        nombre:        ['nombre', 'name', 'producto', 'articulo', 'item'],
-        descripcion:   ['descripcion', 'description', 'detalle', 'desc'],
-        categoria:     ['categoria', 'category', 'cat', 'rubro'],
-        precio_compra: ['precio_compra', 'precio compra', 'costo', 'cost', 'precio de compra'],
-        precio:        ['precio', 'precio_venta', 'precio venta', 'pvp', 'price', 'precio de venta'],
-        stock:         ['stock', 'cantidad', 'quantity', 'qty', 'inventario', 'existencia', 'existencias']
+        codigo:        ['codigo', 'code', 'cod', 'sku', 'ref', 'referencia', 'id', 'cod prod', 'codigo producto', 'cod. prod'],
+        nombre:        ['nombre', 'name', 'producto', 'articulo', 'item', 'art', 'mercaderia', 'bien', 'descripcion del producto', 'nombre del producto'],
+        descripcion:   ['descripcion', 'description', 'detalle', 'desc', 'obs', 'observacion', 'nota', 'notas', 'observaciones'],
+        categoria:     ['categoria', 'category', 'cat', 'rubro', 'tipo', 'grupo', 'familia', 'linea'],
+        precio_compra: ['precio_compra', 'precio compra', 'costo', 'cost', 'precio de compra', 'p. compra', 'pcompra', 'precio costo', 'p costo', 'costo unitario'],
+        precio:        ['precio', 'precio_venta', 'precio venta', 'pvp', 'price', 'precio de venta', 'p. venta', 'pventa', 'precio final', 'precio publico', 'precio al publico'],
+        stock:         ['stock', 'cantidad', 'quantity', 'qty', 'inventario', 'existencia', 'existencias', 'stock actual', 'unidades', 'cant', 'cant.']
     },
 
     async render(view) {
         this._mapped = [];
         this._importing = false;
+        this._detectedHeaders = [];
+        this._headerMap = {};
         this._draw(view);
     },
 
@@ -131,10 +133,18 @@ const ImportarController = {
     _parseRows(rawRows) {
         // Mapear claves del Excel → campos internos
         const headerMap = {};
-        for (const key of Object.keys(rawRows[0] || {})) {
+        const rawKeys = Object.keys(rawRows[0] || {});
+        for (const key of rawKeys) {
             const field = this._mapHeader(key);
             if (field) headerMap[key] = field;
         }
+
+        // Guardar info de columnas para el diagnóstico
+        this._detectedHeaders = rawKeys;
+        this._headerMap = headerMap;
+
+        const mappedFields = new Set(Object.values(headerMap));
+        const nombreMapeado = mappedFields.has('nombre');
 
         const mapped = rawRows.map((row, i) => {
             const obj = { _row: i + 2 };
@@ -146,7 +156,8 @@ const ImportarController = {
 
             // nombre: obligatorio
             const nombre = String(obj.nombre || '').trim();
-            if (!nombre) obj._errors.push('nombre vacío');
+            if (!nombreMapeado) obj._errors.push('columna "nombre" no encontrada en el archivo');
+            else if (!nombre)   obj._errors.push('nombre vacío');
             obj.nombre = nombre;
 
             // campos de texto opcionales
@@ -189,6 +200,40 @@ const ImportarController = {
         const valid   = mapped.filter(r => r._errors.length === 0);
         const invalid = mapped.filter(r => r._errors.length > 0);
 
+        // Panel de diagnóstico de columnas
+        const allFields = Object.keys(this._COLS);
+        const mappedFields = new Set(Object.values(this._headerMap || {}));
+        const unmappedRaw  = (this._detectedHeaders || []).filter(k => !this._headerMap[k]);
+
+        const fieldTags = allFields.map(f => {
+            const ok = mappedFields.has(f);
+            const req = f === 'nombre';
+            const bg    = ok ? '#dcfce7' : (req ? '#fee2e2' : '#f3f4f6');
+            const color = ok ? '#15803d' : (req ? '#dc2626' : '#6b7280');
+            return `<span style="background:${bg};color:${color};padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px">
+                ${ok ? '✓' : (req ? '✗' : '–')} ${f}
+            </span>`;
+        }).join('');
+
+        const unmappedTags = unmappedRaw.length
+            ? `<div style="margin-top:8px;font-size:12px;color:#b45309">
+                Columnas no reconocidas (ignoradas): ${unmappedRaw.map(k => `<strong>${k}</strong>`).join(', ')}
+               </div>`
+            : '';
+
+        const diagHtml = `
+            <div class="card" style="margin-bottom:16px;padding:16px">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px">Columnas detectadas en tu archivo</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px">${fieldTags}</div>
+                ${unmappedTags}
+                ${!mappedFields.has('nombre') ? `<div style="margin-top:10px;padding:10px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:13px;color:#92400e">
+                    <strong>No se encontró la columna "nombre".</strong><br>
+                    Tu archivo tiene: ${(this._detectedHeaders||[]).map(k=>`<strong>${k}</strong>`).join(', ')}.<br>
+                    Renombrá la columna a <strong>nombre</strong> (o producto, articulo, item) y volvé a cargar el archivo.
+                </div>` : ''}
+            </div>
+        `;
+
         const bodyRows = mapped.map(r => {
             const hasErr = r._errors.length > 0;
             const rowStyle = hasErr ? 'background:#fff5f5' : '';
@@ -206,7 +251,7 @@ const ImportarController = {
             </tr>`;
         }).join('');
 
-        document.getElementById('import-preview').innerHTML = `
+        document.getElementById('import-preview').innerHTML = diagHtml + `
             <div class="card" style="margin-bottom:20px">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
                     <h3 style="margin:0;font-size:15px;font-weight:600">
