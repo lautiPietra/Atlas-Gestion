@@ -16,9 +16,24 @@ const ProductosController = {
         this._draw(view);
     },
 
+    async _loadAllProductos() {
+        const PAGE = 999;
+        let all = [], offset = 0;
+        while (true) {
+            const page = await SupabaseClient.select('productos', {
+                select: '*', order: 'nombre.asc', limit: PAGE, offset
+            });
+            if (!page || page.length === 0) break;
+            all = all.concat(page);
+            if (page.length < PAGE) break;
+            offset += PAGE;
+        }
+        return all;
+    },
+
     async _load() {
         const [prods, cats] = await Promise.all([
-            SupabaseClient.select('productos', { select: '*', order: 'nombre.asc', limit: 3000 }),
+            this._loadAllProductos(),
             SupabaseClient.select('categorias', { select: '*', order: 'nombre.asc' })
         ]);
         this._productos = prods || [];
