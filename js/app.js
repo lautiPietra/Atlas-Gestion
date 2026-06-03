@@ -11,7 +11,7 @@ const App = (() => {
         { route: '/clientes',    label: 'Clientes',     icon: '◉' },
         { route: '/proveedores', label: 'Proveedores',  icon: '◫' },
         { route: '/reportes',    label: 'Reportes',     icon: '◰' },
-        { route: '/importar',    label: 'Importar',     icon: '⊕' }
+        { route: '/importar',    label: 'Importar productos', icon: '⊕' }
     ];
 
     function renderApp(user) {

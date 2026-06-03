@@ -333,6 +333,42 @@ const ImportarController = {
         if (view) this.render(view);
     },
 
+    _showProgress(current, total) {
+        let overlay = document.getElementById('import-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'import-overlay';
+            overlay.style.cssText = `
+                position:fixed;inset:0;z-index:9999;
+                background:rgba(0,0,0,0.82);
+                display:flex;align-items:center;justify-content:center;
+            `;
+            overlay.innerHTML = `
+                <div style="background:#fff;border-radius:14px;padding:36px 44px;text-align:center;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+                    <div style="font-size:2rem;margin-bottom:12px">⏳</div>
+                    <div style="font-size:18px;font-weight:700;margin-bottom:6px">Importando productos...</div>
+                    <div id="import-progress-text" style="font-size:28px;font-weight:800;color:#0a0a0a;margin:16px 0"></div>
+                    <div style="background:#f3f4f6;border-radius:99px;height:8px;overflow:hidden;margin-bottom:20px">
+                        <div id="import-progress-bar" style="height:100%;background:#0a0a0a;border-radius:99px;transition:width 0.2s;width:0%"></div>
+                    </div>
+                    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px 16px;font-size:13px;color:#92400e;line-height:1.5">
+                        ⚠️ <strong>No cerrés esta pestaña</strong> hasta que se complete la importación.<br>
+                        Si cambiás de página el proceso se interrumpe.
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+        const pct = Math.round((current / total) * 100);
+        document.getElementById('import-progress-text').textContent = `${current} de ${total}`;
+        document.getElementById('import-progress-bar').style.width = `${pct}%`;
+    },
+
+    _hideProgress() {
+        const overlay = document.getElementById('import-overlay');
+        if (overlay) overlay.remove();
+    },
+
     async doImport() {
         if (this._importing) return;
         const validRows = this._mapped.filter(r => r._errors.length === 0);
@@ -340,12 +376,12 @@ const ImportarController = {
 
         this._importing = true;
         const btn = document.getElementById('import-btn');
-        if (btn) { btn.disabled = true; btn.textContent = 'Importando...'; }
+        if (btn) btn.disabled = true;
 
         let ok = 0, fail = 0;
 
         for (let i = 0; i < validRows.length; i++) {
-            if (btn) btn.textContent = `Importando ${i + 1} de ${validRows.length}...`;
+            this._showProgress(i + 1, validRows.length);
 
             const r = validRows[i];
             const data = {
@@ -366,6 +402,7 @@ const ImportarController = {
             }
         }
 
+        this._hideProgress();
         this._importing = false;
 
         if (ok > 0)   Toast.success(`${ok} producto${ok !== 1 ? 's' : ''} importado${ok !== 1 ? 's' : ''} correctamente`);
