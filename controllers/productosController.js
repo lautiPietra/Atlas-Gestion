@@ -59,7 +59,8 @@ const ProductosController = {
                 <div class="page-actions">
                     <button class="btn btn-outline btn-sm" onclick="ProductosController.toggleInactiveView()">${this._showInactive ? 'Ocultar inactivos' : 'Ver inactivos'}</button>
                     <button class="btn btn-outline btn-sm" onclick="ProductosController.openCategorias()">Categorias</button>
-                    <button class="btn btn-outline btn-sm" onclick="ProductosController.openMargenGlobal()">% Margen global</button>
+                    <button class="btn btn-outline btn-sm" onclick="ProductosController.openCategorizarMasa()">Categorizar en masa</button>
+                    <button class="btn btn-outline btn-sm" onclick="ProductosController.openMargenGlobal()">% Margen</button>
                     <button class="btn btn-primary" onclick="ProductosController.openForm()">
                         ${Utils.icon('plus')} Nuevo producto
                     </button>
@@ -419,80 +420,101 @@ const ProductosController = {
         }
     },
 
-    // ── Margen global sobre todos los productos activos ──────
+    // ── Margen (global o por categoría) ─────────────────────
     openMargenGlobal() {
         const activos = this._productos.filter(p => p.activo !== false);
+        const cats = [...new Set(activos.map(p => p.categoria).filter(Boolean))].sort();
+        const catOpts = cats.map(c => {
+            const n = activos.filter(p => p.categoria === c).length;
+            return `<option value="${Utils.escape(c)}">${Utils.escape(c)} (${n})</option>`;
+        }).join('');
+
         Modal.open({
-            title: 'Aplicar margen global',
+            title: 'Aplicar margen de ganancia',
             size: 'sm',
             body: `
-                <p style="margin:0 0 16px;color:var(--gray-500);font-size:14px">
-                    Calcula el precio de venta de <strong>${activos.length} producto${activos.length !== 1 ? 's' : ''} activo${activos.length !== 1 ? 's' : ''}</strong>
-                    aplicando el porcentaje sobre el precio de compra de cada uno.<br>
-                    <span style="font-size:12px">precio de venta = precio de compra × (1 + margen / 100)</span>
+                <p style="margin:0 0 16px;color:var(--gray-500);font-size:13px">
+                    precio venta = precio compra × (1 + margen / 100)
                 </p>
                 <div class="form-group">
+                    <label class="form-label">Aplicar a</label>
+                    <select class="form-select" id="margen-global-cat" onchange="ProductosController._updateMargenGlobalUI()">
+                        <option value="">Todos los activos (${activos.length})</option>
+                        ${catOpts}
+                    </select>
+                </div>
+                <div class="form-group">
                     <label class="form-label required">Margen de ganancia (%)</label>
-                    <input type="number" class="form-input" id="margen-global-val" placeholder="ej: 20" min="0" step="0.01" autofocus/>
+                    <input type="number" class="form-input" id="margen-global-val" placeholder="ej: 20" min="0" step="0.01"
+                           oninput="ProductosController._updateMargenGlobalUI()"/>
                     <span class="form-hint" id="margen-global-preview"></span>
                 </div>
             `,
             footer: `
                 <button class="btn btn-outline" onclick="Modal.close()">Cancelar</button>
-                <button class="btn btn-primary" onclick="ProductosController.aplicarMargenGlobal()">
-                    Aplicar a ${activos.length} productos
+                <button class="btn btn-primary" id="margen-apply-btn" onclick="ProductosController.aplicarMargenGlobal()">
+                    Aplicar
                 </button>
             `
         });
-        setTimeout(() => {
-            const input = document.getElementById('margen-global-val');
-            if (input) {
-                input.focus();
-                input.addEventListener('input', () => {
-                    const m = parseFloat(input.value);
-                    const preview = document.getElementById('margen-global-preview');
-                    if (!preview) return;
-                    if (!Number.isNaN(m) && m >= 0) {
-                        const ej = activos.find(p => parseFloat(p.precio_compra) > 0);
-                        if (ej) {
-                            const nuevo = (parseFloat(ej.precio_compra) * (1 + m / 100)).toFixed(2);
-                            preview.textContent = `Ej: ${ej.nombre} → ${Utils.currency(nuevo)}`;
-                        }
-                    } else {
-                        preview.textContent = '';
-                    }
-                });
+        setTimeout(() => ProductosController._updateMargenGlobalUI(), 50);
+    },
+
+    _updateMargenGlobalUI() {
+        const catVal = document.getElementById('margen-global-cat')?.value || '';
+        const m = parseFloat(document.getElementById('margen-global-val')?.value);
+        const activos = this._productos.filter(p => p.activo !== false);
+        const targets = catVal ? activos.filter(p => p.categoria === catVal) : activos;
+
+        const btn = document.getElementById('margen-apply-btn');
+        if (btn) {
+            const label = catVal ? `"${catVal}"` : 'todos los activos';
+            btn.textContent = `Aplicar a ${targets.length} producto${targets.length !== 1 ? 's' : ''} (${label})`;
+        }
+
+        const preview = document.getElementById('margen-global-preview');
+        if (!preview) return;
+        if (!Number.isNaN(m) && m >= 0) {
+            const ej = targets.find(p => parseFloat(p.precio_compra) > 0);
+            if (ej) {
+                const nuevo = (parseFloat(ej.precio_compra) * (1 + m / 100)).toFixed(2);
+                preview.textContent = `Ej: ${Utils.escape(ej.nombre)} → ${Utils.currency(nuevo)}`;
+            } else {
+                preview.textContent = '';
             }
-        }, 50);
+        } else {
+            preview.textContent = '';
+        }
     },
 
     async aplicarMargenGlobal() {
         const margen = parseFloat(document.getElementById('margen-global-val')?.value);
+        const catFiltro = document.getElementById('margen-global-cat')?.value || '';
         if (Number.isNaN(margen) || margen < 0) {
             Toast.warning('Ingresá un porcentaje válido');
             return;
         }
 
         const activos = this._productos.filter(p => p.activo !== false);
-        if (!activos.length) { Toast.warning('No hay productos activos'); return; }
+        const targets = catFiltro ? activos.filter(p => p.categoria === catFiltro) : activos;
+        if (!targets.length) { Toast.warning('No hay productos en esa selección'); return; }
 
         Modal.close();
 
-        const conPrecio = activos.filter(p => parseFloat(p.precio_compra) > 0);
-        const sinPrecio = activos.length - conPrecio.length;
+        const conPrecio = targets.filter(p => parseFloat(p.precio_compra) > 0);
+        const sinPrecio = targets.length - conPrecio.length;
 
         if (!conPrecio.length) {
             Toast.warning('Ningún producto tiene precio de compra cargado');
             return;
         }
 
-        // Overlay de progreso
         const overlay = document.createElement('div');
         overlay.id = 'margen-overlay';
         overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.82);display:flex;align-items:center;justify-content:center;';
         overlay.innerHTML = `
             <div style="background:#fff;border-radius:8px;padding:32px 40px;text-align:center;min-width:300px;max-width:360px">
-                <div style="font-size:1rem;font-weight:700;margin-bottom:8px">Aplicando margen global...</div>
+                <div style="font-size:1rem;font-weight:700;margin-bottom:8px">Aplicando margen${catFiltro ? ` a "${Utils.escape(catFiltro)}"` : ' global'}...</div>
                 <div id="margen-prog-text" style="font-size:2rem;font-weight:800;margin-bottom:14px">0 de ${conPrecio.length}</div>
                 <div style="background:#e5e7eb;border-radius:4px;height:8px;overflow:hidden">
                     <div id="margen-prog-bar" style="height:100%;background:#0a0a0a;transition:width .1s;width:0%"></div>
@@ -522,6 +544,169 @@ const ProductosController = {
 
         if (ok)   Toast.success(`Margen del ${margen}% aplicado a ${ok} producto${ok !== 1 ? 's' : ''}`);
         if (skip) Toast.warning(`${skip} producto${skip !== 1 ? 's' : ''} omitido${skip !== 1 ? 's' : ''} (sin precio de compra)`);
+
+        await this._load();
+        this._draw(document.getElementById('app-view'));
+    },
+
+    // ── Categorizar en masa ──────────────────────────────────
+    _masaSelected: new Set(),
+
+    openCategorizarMasa() {
+        this._masaSelected = new Set();
+        const cats = this._categorias;
+        const catOpts = cats.map(c => `<option value="${Utils.escape(c.nombre)}">${Utils.escape(c.nombre)}</option>`).join('');
+
+        Modal.open({
+            title: 'Categorizar productos en masa',
+            size: 'lg',
+            body: `
+                <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:flex-end">
+                    <div class="form-group" style="margin:0;flex:1;min-width:200px">
+                        <label class="form-label">Asignar categoría</label>
+                        <select class="form-select" id="masa-cat-destino">
+                            <option value="">-- Elegir categoría --</option>
+                            ${catOpts}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;flex:1;min-width:200px">
+                        <label class="form-label">Buscar producto</label>
+                        <input class="form-input" id="masa-search" placeholder="Nombre o código..."
+                               oninput="ProductosController._renderMasaList()"/>
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.84rem;cursor:pointer;user-select:none">
+                        <input type="checkbox" id="masa-solo-sin-cat" onchange="ProductosController._renderMasaList()"/>
+                        Solo sin categoría
+                    </label>
+                    <span style="flex:1"></span>
+                    <button class="btn btn-outline btn-sm" onclick="ProductosController._masaSelectAll()">Seleccionar visibles</button>
+                    <button class="btn btn-outline btn-sm" onclick="ProductosController._masaClearAll()">Deseleccionar todos</button>
+                </div>
+                <div id="masa-list-wrapper" style="max-height:360px;overflow-y:auto;border:1px solid var(--gray-200);border-radius:var(--radius)"></div>
+                <div id="masa-status" style="font-size:0.82rem;color:var(--gray-500);margin-top:8px;min-height:18px"></div>
+            `,
+            footer: `
+                <button class="btn btn-outline" onclick="Modal.close()">Cancelar</button>
+                <button class="btn btn-primary" onclick="ProductosController.aplicarCategoriaMasa()">Asignar a seleccionados</button>
+            `
+        });
+        setTimeout(() => ProductosController._renderMasaList(), 50);
+    },
+
+    _getMasaVisibles() {
+        const search = Utils.normalizeText(document.getElementById('masa-search')?.value || '');
+        const soloCat = document.getElementById('masa-solo-sin-cat')?.checked;
+        let list = this._productos.filter(p => p.activo !== false);
+        if (soloCat) list = list.filter(p => !p.categoria);
+        if (search) list = list.filter(p =>
+            Utils.normalizeText(p.nombre).includes(search) ||
+            Utils.normalizeText(p.codigo || '').includes(search)
+        );
+        return list;
+    },
+
+    _renderMasaList() {
+        const wrapper = document.getElementById('masa-list-wrapper');
+        if (!wrapper) return;
+        const visibles = this._getMasaVisibles();
+        const MAX = 200;
+        const toShow = visibles.slice(0, MAX);
+
+        if (!toShow.length) {
+            wrapper.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray-400);font-size:0.85rem">No se encontraron productos</div>';
+            this._updateMasaStatus(visibles.length);
+            return;
+        }
+
+        wrapper.innerHTML = toShow.map(p => `
+            <label class="masa-row${this._masaSelected.has(p.id) ? ' masa-row-sel' : ''}">
+                <input type="checkbox" ${this._masaSelected.has(p.id) ? 'checked' : ''}
+                       onchange="ProductosController._masaToggle(${p.id}, this.checked)"/>
+                <span class="masa-row-nombre">${Utils.escape(p.nombre)}</span>
+                <span class="masa-row-cat">${Utils.escape(p.categoria || 'Sin categoría')}</span>
+            </label>
+        `).join('');
+
+        this._updateMasaStatus(visibles.length);
+    },
+
+    _updateMasaStatus(total) {
+        const status = document.getElementById('masa-status');
+        if (!status) return;
+        const sel = this._masaSelected.size;
+        const extra = total - 200;
+        const parts = [];
+        if (sel) parts.push(`${sel} seleccionado${sel !== 1 ? 's' : ''}`);
+        if (extra > 0) parts.push(`hay ${extra} más — refiná la búsqueda para verlos`);
+        status.textContent = parts.join(' · ');
+    },
+
+    _masaToggle(id, checked) {
+        if (checked) this._masaSelected.add(id);
+        else this._masaSelected.delete(id);
+        this._updateMasaStatus(this._getMasaVisibles().length);
+        // highlight the row
+        const wrapper = document.getElementById('masa-list-wrapper');
+        if (!wrapper) return;
+        const labels = wrapper.querySelectorAll('.masa-row');
+        labels.forEach(lbl => {
+            const cb = lbl.querySelector('input[type=checkbox]');
+            if (cb) lbl.classList.toggle('masa-row-sel', cb.checked);
+        });
+    },
+
+    _masaSelectAll() {
+        this._getMasaVisibles().slice(0, 200).forEach(p => this._masaSelected.add(p.id));
+        this._renderMasaList();
+    },
+
+    _masaClearAll() {
+        this._masaSelected.clear();
+        this._renderMasaList();
+    },
+
+    async aplicarCategoriaMasa() {
+        const cat = document.getElementById('masa-cat-destino')?.value;
+        if (!cat) { Toast.warning('Elegí una categoría de destino'); return; }
+        if (!this._masaSelected.size) { Toast.warning('No hay productos seleccionados'); return; }
+
+        const ids = [...this._masaSelected];
+        Modal.close();
+
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.82);display:flex;align-items:center;justify-content:center;';
+        overlay.innerHTML = `
+            <div style="background:#fff;border-radius:8px;padding:32px 40px;text-align:center;min-width:300px;max-width:360px">
+                <div style="font-size:1rem;font-weight:700;margin-bottom:8px">Asignando categoría...</div>
+                <div id="cat-prog-text" style="font-size:2rem;font-weight:800;margin-bottom:14px">0 de ${ids.length}</div>
+                <div style="background:#e5e7eb;border-radius:4px;height:8px;overflow:hidden">
+                    <div id="cat-prog-bar" style="height:100%;background:#0a0a0a;transition:width .1s;width:0%"></div>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+
+        let ok = 0, skip = 0;
+        const BATCH = 25;
+
+        for (let i = 0; i < ids.length; i += BATCH) {
+            document.getElementById('cat-prog-text').textContent = `${i} de ${ids.length}`;
+            document.getElementById('cat-prog-bar').style.width = `${Math.round(i / ids.length * 100)}%`;
+
+            const chunk = ids.slice(i, i + BATCH);
+            const results = await Promise.allSettled(
+                chunk.map(id => SupabaseClient.update('productos', id, { categoria: cat }))
+            );
+            ok   += results.filter(r => r.status === 'fulfilled').length;
+            skip += results.filter(r => r.status === 'rejected').length;
+        }
+
+        overlay.remove();
+        this._masaSelected.clear();
+
+        if (ok)   Toast.success(`Categoría "${cat}" asignada a ${ok} producto${ok !== 1 ? 's' : ''}`);
+        if (skip) Toast.warning(`${skip} no se pudieron actualizar`);
 
         await this._load();
         this._draw(document.getElementById('app-view'));

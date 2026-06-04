@@ -231,6 +231,22 @@
     flex: 1; font-size: 0.8rem; color: var(--gray-500);
 }
 
+/* ── Categorizar en masa ── */
+.masa-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--gray-100);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background .1s;
+}
+.masa-row:last-child { border-bottom: none; }
+.masa-row:hover { background: var(--gray-50); }
+.masa-row-sel { background: #eff6ff !important; }
+.masa-row input[type=checkbox] { flex-shrink: 0; cursor: pointer; }
+.masa-row-nombre { flex: 1; font-weight: 500; color: var(--black); }
+.masa-row-cat { font-size: 0.76rem; color: var(--gray-400); white-space: nowrap; }
+
 /* ── Importar productos ── */
 .import-dropzone {
     border: 2px dashed var(--gray-300);
